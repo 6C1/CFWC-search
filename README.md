@@ -1,7 +1,9 @@
-FBNR
+CFWC
 ====
 
-Tools for the fictitious band name repository
+Tools for the Cool Freaks' Wikipedia Club.
+
+Forked from DanielPorter's FBNR tool; he's the real hero.
 
 ## Workflow
 How to use this:
