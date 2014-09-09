@@ -3,7 +3,7 @@ CFWC
 
 Tools for the Cool Freaks' Wikipedia Club.
 
-Forked from DanielPorter's FBNR tool; he's the real hero.
+Forked from DanielPorter's FBNR tool; he's the real hero, and wrote 99.99% of the code, and all the rest of this README, too.
 
 ## Workflow
 How to use this:
