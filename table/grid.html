@@ -43,23 +43,17 @@
 <script src="slickgrid/slick.dataview.js"></script>
 <script src="slick.autotooltips.js"></script>
  <script src="posts.json" type="text/javascript"></script>
-<script src="joindates.js" type="text/javascript"></script>
 <script>
   var filterArgs = [];
   var filterSearch = "";
   var grid;
-  joindates.push("Daniel Porter|asdf");
-  joindates.sort();
   var names = {};
-  for(var i = 0; i < joindates.length; i++){
-    names[joindates[i].split('|')[0]] = 0;
-  }
   for(var i = 0; i < posts.length; i++){
-    names[posts[i].name] = 0;
+    names[posts[i]["from"]["name"]] = 0;
   }
 var columns = [
-     {id: "date", name:"Posted", field:"created_time", width:110, sortable:true, 
-        formatter: formatter = 
+     {id: "date", name:"Time", field:"created_time", width:110, sortable:true, 
+        formatter: formatter = // Formats colour of text based on age of post
             function formatter(row, cell, value, columnDef, dataContext) {
                 postAgeMonths = moment().diff(moment(value), 'months');
                 postAgeWeeks = moment().diff(moment(value), 'weeks');
@@ -78,12 +72,12 @@ var columns = [
                 }
                 return "<span style=\"color: "+postAgeGroup+"\">"+moment(value).fromNow() +"</span>";
             }},
-     {id: "article", name: "Article/Link", field: "name", width:200, minWidth:120 ,
+     {id: "article", name: "Article/Link", field: "name", width:200, minWidth:120, sortable:true,
         formatter: linkFormatter = 
             function ( row, cell, value, columnDef, dataContext ) {
                 return '<a href="' + dataContext['link'] + '" target="_blank">' + value + '</a>';
             } },
-     {id: "user", name: "Cool Freak", field: "from.name", width:120, minWidth:120, cssClass: "cell-title", sortable: true,
+     {id: "user", name: "Cool Freak", field: "from.name", width:120, minWidth:120, cssClass: "cell-title",
         formatter: linkFormatter = 
                 function ( row, cell, value, columnDef, dataContext ) {
                     return '<a href=https://www.facebook.com/' +dataContext["from"]["id"] + '>' + value + '</a>';
@@ -103,33 +97,48 @@ var columns = [
 
   // Define search and user name filter behaviour
 function myFilter(item, args){
+    return (userFilter(args.names) && searchTermFilter(args.search));
+    function userFilter(names) {
 
     // Apply user name filter, if we have one
-    if(args.names.length > 0)
+    if(names.length > 0)
     {
-        for(var i = 0; i < args.names.length; i++)
+        for(var i = 0; i < names.length; i++)
         {
-            if(item["from"]["name"] == args.names[i])
+            if(item["from"]["name"] == names[i])
             {
                 return true;
             }
         }
         return false;
-    }
-    
-    // Check 'name' (Wikipedia article name) and 'message' (poster's msg) for search term
-    term = args.search.trim().toLowerCase();
-    if(term != "") {
-        if ((item["name"] && item["name"].toLowerCase().indexOf(term) != -1) ||
-             (item["message"] && item["message"].toLowerCase().indexOf(term) != -1)) {
-            return true;
-        }
-        else return false;
-    }
-    
-    else
+    } else {
         return true;
+    }
 }
+
+    function searchTermFilter(search) {
+        // Check 'name' (Wikipedia article name) and 'message' (poster's msg) for search term
+        term = search.trim().toLowerCase();
+        if(term != "") {
+            // extract terms from url (for case where user pastes in a URL)
+            if (term.indexOf("/wiki/") != -1) {
+                term = term.substring(term.lastIndexOf("/")+1).replace("_"," ");
+            } else if (term.indexOf("w/index.php?title=") != -1) {
+                term = term.substring(term.indexOf("?title=")+7).replace("_"," ");
+            }
+            
+            if ((item["name"] && item["name"].toLowerCase().indexOf(term) != -1) ||
+                 (item["message"] && item["message"].toLowerCase().indexOf(term) != -1)) {
+                return true;
+            }
+            else return false;
+        } else {
+            return true
+        }
+    }
+}
+
+
   $(function () {
     dataView = new Slick.Data.DataView();
     dataView.setItems(posts);
@@ -182,9 +191,8 @@ function myFilter(item, args){
             post["link"] = post["link"].replace("m.", "");
         }
     }
-    // dataView.sort(function(a,b) { return a["likes"] > b["likes"] ? 1: -1;}, false);
     
-    // Add this option to 'dig into' json nested object (see http://stackoverflow.com/questions/9179783/slickgrid-column-definition-with-complex-objects)
+    // Added this option to allow slickgrid 'dig into' json nested object (see http://stackoverflow.com/questions/9179783/slickgrid-column-definition-with-complex-objects)
     // enables us to use for example "from.name" as a column field to retrieve user's name
     var options = {
         dataItemColumnValueExtractor: function(item, columnDef) {
@@ -207,6 +215,7 @@ function myFilter(item, args){
     grid.setSortColumn("likes", false); 
     names_list = [];
     for(var k in names) names_list.push(k);
+    names_list.sort();
     for(var i = 0; i < names_list.length; i++)
     {
 	var a = $('<option></option>');
@@ -229,7 +238,7 @@ function myFilter(item, args){
     });
     $('#search_box').bind('input', function() { 
         filterSearch =$(this).val();
-	updateFilter();
+        updateFilter();
     });
     dataView.onRowCountChanged.subscribe(function (e, args) {
 	grid.updateRowCount();
