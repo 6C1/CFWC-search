@@ -25,27 +25,31 @@ def main():
     print("Querying Graph API with following request:\n%s" % url)
     response = urllib2.urlopen(url)
     html = response.read()
-    parsed = json.loads(html)["feed"]
-    allposts = []
-    addJSONtoCollection(allposts, parsed["data"])
-    print("# of posts retrieved: %s" % len(allposts))
+    load = json.loads(html)
+    if (load['message'] != u'Invalid OAuth access token.'):
+        parsed = load["feed"]
+        allposts = []
+        addJSONtoCollection(allposts, parsed["data"])
+        print("# of posts retrieved: %s" % len(allposts))
     
-    #assumes there will be a next because i'm being lazy
-    parsed['paging']['next'] = re.sub('limit=[0-9]*', 'limit=500', parsed['paging']['next'])
-    while 'paging' in parsed:
-        if 'next' in parsed['paging']:
-            response = urllib2.urlopen(parsed["paging"]["next"])
-            html = response.read()
-            parsed = json.loads(html)
-            addJSONtoCollection(allposts, parsed["data"])
-            print("# of posts retrieved: %s" % len(allposts))
-        else:
-            break
-    print("Saving posts to posts.json...")
-    output = open('posts.json', 'w')
-    output.write("posts =")
-    output.write(json.dumps(allposts))
-    output.close()
-    print("Done!")
+        #assumes there will be a next because i'm being lazy
+        parsed['paging']['next'] = re.sub('limit=[0-9]*', 'limit=500', parsed['paging']['next'])
+        while 'paging' in parsed:
+            if 'next' in parsed['paging']:
+                response = urllib2.urlopen(parsed["paging"]["next"])
+                html = response.read()
+                parsed = json.loads(html)
+                addJSONtoCollection(allposts, parsed["data"])
+                print("# of posts retrieved: %s" % len(allposts))
+            else:
+                break
+        print("Saving posts to posts.json...")
+        output = open('posts.json', 'w')
+        output.write("posts =")
+        output.write(json.dumps(allposts))
+        output.close()
+        print("Done!")
+    else:
+	print "Invalid OAuth access token."
 if __name__ == "__main__":
     main()
