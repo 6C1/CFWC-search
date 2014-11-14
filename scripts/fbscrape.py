@@ -26,7 +26,7 @@ def main():
     response = urllib2.urlopen(url)
     html = response.read()
     load = json.loads(html)
-    if (load['message'] != u'Invalid OAuth access token.'):
+    if u'error' not in load.keys():
         parsed = load["feed"]
         allposts = []
         addJSONtoCollection(allposts, parsed["data"])
@@ -50,6 +50,6 @@ def main():
         output.close()
         print("Done!")
     else:
-	print "Invalid OAuth access token."
+	print load[u'error'][u'type']+": "+load[u'error'][u'message']
 if __name__ == "__main__":
     main()
